@@ -740,3 +740,90 @@ def psychrometric_vapor_pressure_wet(dry_bulb_temperature, wet_bulb_temperature,
     """
     return (saturation_vapor_pressure(wet_bulb_temperature) - psychrometer_coefficient *
             pressure * (dry_bulb_temperature - wet_bulb_temperature).to('kelvin'))
+
+@exporter.export
+def get_isentropic_pressure(lev,tmpk,lat,lon,times,isentlevs,max_iters=10,eps=1e-3):
+    r"""Compute the pressure on isentropic surfaces.
+
+    Parameters
+    ----------
+    levs : array
+        Pressure levels in hPa
+    tmpk : array
+        Temperature in Kelvin
+    lat  : array
+        Array of latitude points
+    lon  : array
+        Array of longitude points
+    times  : array
+        Array of valid times
+    isentlevs : array
+        Array of desired theta surfaces
+
+    Returns
+    -------
+    isentpr : array_like
+        Array of pressure at specified theta surfaces
+
+    Other Parameters
+    ----------------
+    max_iters : int, optional
+        The maximum number of iterations to use in calculation, defaults to 10.
+    eps : float, optional
+        The desired absolute error in the calculated value, defaults to 1e-3.
+    See Also
+    --------
+    potential_temperature
+
+    """
+    levs = np.repeat(np.repeat(np.repeat(lev[:,np.newaxis],
+                                     lat.size,axis=1)[:,:,np.newaxis],
+                           lon.size,axis=2)[np.newaxis,:,:,:],
+                 times.size,axis=0)
+    # exponent to Poisson's Equation, which is in metpy.constants
+    #kappa = metpy.constants.poisson_exponent
+    K = kappa*1000*units('g/kg')
+    #thtalevs = tmpk*(1000./levs)**(K)
+    #### Assumes temp in K and pres in hPa
+    thtalevs = potential_temperature(levs*units.hPa,tmpk*units.K)
+    ithtalevs = thtalevs.magnitude
+    isentprs3 = np.empty((times.size,isentlevs.size,lat.size,lon.size))
+    pk = np.log(lev)
+#    eps = 0.001
+    pok = 1000.**(K)
+#    kmax = 10
+    for tlev in range(isentlevs.size):
+        for i in range(lon.size):
+            for j in range(lat.size):
+                test = np.where(np.array(thtalevs[0,:,j,i])>=float(isentlevs[tlev]))
+                minv=np.min(test[0])-1
+                if (minv > 0):
+                    # Implementation of GEMPAK routine for computing pressure of a theta level:
+                    # The method solves an implicit equation derived by combining the      *
+                    # definition of potential temperature and the assumption that tem-     *
+                    # perature varies linearly with ln (p).  Newton iteration is used to   *
+                    # solve for ln (p).
+                    a = (tmpk[0,minv+1,j,i] - tmpk[0,minv,j,i])/(pk[minv+1]-pk[minv])
+                    b = tmpk[0,minv+1,j,i] - a*pk[minv+1]
+                    if (ithtalevs[0,minv+1,j,i] != ithtalevs[0,minv,j,i]):
+                        rm = (isentlevs[tlev]-ithtalevs[0,minv,j,i])/(ithtalevs[0,minv+1,j,i]
+                                                                      -ithtalevs[0,minv,j,i])
+                    else:
+                        rm = 0.5
+                    pk1 = pk[minv] + rm*(pk[minv+1]-pk[minv])
+                    res = 1.
+                    k = 1
+                    while max_iters:
+                        ekp = np.exp((-K)*pk1)
+                        t = a*pk1 + b
+                        f = isentlevs[tlev] - pok*t*ekp
+                        fp = pok*ekp*((K)*t - a)
+                        pin = pk1 - (f/fp)
+                        if np.abs(pk1 - pin) < eps:
+                            break
+                        pk1 = pin
+                        max_iters -= 1
+                    isentprs3[0,tlev,j,i] = np.exp(pk1)
+                else:
+                    isentprs3[0,tlev,j,i]='nan'
+    return isentprs3
