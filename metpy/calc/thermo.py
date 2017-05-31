@@ -743,7 +743,7 @@ def psychrometric_vapor_pressure_wet(dry_bulb_temperature, wet_bulb_temperature,
 
 
 @exporter.export
-def get_isentropic_pressure(lev, tmpk, lat, lon, times, isentlevs, max_iters=10, eps=1e-3):
+def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=10, eps=1e-3):
     r"""Compute the pressure on isentropic surfaces.
 
     Parameters
@@ -752,18 +752,12 @@ def get_isentropic_pressure(lev, tmpk, lat, lon, times, isentlevs, max_iters=10,
         Pressure levels in hPa
     tmpk : array
         Temperature in Kelvin
-    lat  : array
-        Array of latitude points
-    lon  : array
-        Array of longitude points
-    times  : array
-        Array of valid times
     isentlevs : array
         Array of desired theta surfaces
 
     Returns
     -------
-    isentpr : array_like
+    isentpr : array
         Array of pressure at specified theta surfaces
 
     Other Parameters
@@ -778,20 +772,20 @@ def get_isentropic_pressure(lev, tmpk, lat, lon, times, isentlevs, max_iters=10,
 
     """
     levs = np.repeat(np.repeat(np.repeat(lev[:, np.newaxis],
-                     lat.size, axis=1)[:, :, np.newaxis],
-                     lon.size, axis=2)[np.newaxis, :, :, :],
-                     times.size, axis=0)
+                     tmpk.shape[2], axis=1)[:, :, np.newaxis],
+                     tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
+                     tmpk.shape[0], axis=0)
     # exponent to Poisson's Equation, which is imported above
     ka = kappa * 1000 * units('g/kg')
     # Assumes temp in K and pres in hPa
     thtalevs = potential_temperature(levs * units.hPa, tmpk * units.K)
     ithtalevs = thtalevs.magnitude
-    isentprs3 = np.empty((times.size, isentlevs.size, lat.size, lon.size))
+    isentprs3 = np.empty((tmpk.shape[0], isentlevs.size, tmpk.shape[2], tmpk.shape[3]))
     pk = np.log(lev)
     pok = 1000.**(ka)
     for tlev in range(isentlevs.size):
-        for i in range(lon.size):
-            for j in range(lat.size):
+        for i in range(tmpk.shape[3]):
+            for j in range(tmpk.shape[2]):
                 test = np.where(np.array(thtalevs[0, :, j, i]) >= float(isentlevs[tlev]))
                 minv = np.min(test[0]) - 1
                 if (minv > 0):
