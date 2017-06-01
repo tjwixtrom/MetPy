@@ -855,10 +855,10 @@ def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=10, eps=1e-3):
     """
     def _isen_iter(pk1, isentlev, ka, a, b, pok):
         ekp = np.exp((-ka) * pk1)
-        t = a * pk1 + b
-        f = isentlev - pok * t * ekp
+        t = (a * pk1) + b
+        f = isentlev - (pok * t * ekp)
         fp = pok * ekp * ((ka) * t - a)
-        return pk1 - (f / fp)
+        return (pk1 - (f / fp))
 
     levs = np.repeat(np.repeat(np.repeat(lev[:, np.newaxis],
                      tmpk.shape[2], axis=1)[:, :, np.newaxis],
