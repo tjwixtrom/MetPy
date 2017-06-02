@@ -764,9 +764,15 @@ def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=50, eps=1e-3):
     Other Parameters
     ----------------
     max_iters : int, optional
-        The maximum number of iterations to use in calculation, defaults to 10.
+        The maximum number of iterations to use in calculation, defaults to 50.
     eps : float, optional
         The desired absolute error in the calculated value, defaults to 1e-3.
+
+    Notes
+    -----
+    Temperature array must have the same number of vertical levels as the pressure levels
+    array.
+
     See Also
     --------
     potential_temperature
@@ -788,14 +794,21 @@ def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=50, eps=1e-3):
     # Assumes temp in K and pres in hPa
     thtalevs = potential_temperature(levs * units.hPa, tmpk * units.K)
     ithtalevs = thtalevs.magnitude
-    isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
+    isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size,
+                                   tmpk.shape[2], tmpk.shape[3]))
     pk = np.log(levs)
     pok = 1000.**(ka)
     minv = np.apply_along_axis(np.searchsorted,0,thtalevs[0,:], isentlevs)
     ar = np.arange
-    a = (tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - tmpk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]) / (pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
-    b = tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - a * pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]
-    pk1 = pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] + 0.5 * (pk[0,minv + 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    a = (tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - tmpk[0,minv - 1,
+         ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]) /
+         (pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - p
+         k[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    b = (tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - a * pk[0,minv,
+        ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    pk1 = (pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] +
+            0.5 * (pk[0,minv + 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] -
+            pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]))
     while max_iters:
         ekp = np.exp((-ka) * pk1)
         t = a * pk1 + b
@@ -811,6 +824,7 @@ def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=50, eps=1e-3):
             break
     isentprs3 = np.exp(pk1)
     return isentprs3
+
 
 @exporter.export
 def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=50, eps=1e-6):
@@ -833,9 +847,15 @@ def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=50, eps=1e-6):
     Other Parameters
     ----------------
     max_iters : int, optional
-        The maximum number of iterations to use in calculation, defaults to 10.
+        The maximum number of iterations to use in calculation, defaults to 50.
     eps : float, optional
-        The desired absolute error in the calculated value, defaults to 1e-3.
+        The desired absolute error in the calculated value, defaults to 1e-6.
+
+    Notes
+    -----
+    Temperature array must have the same number of vertical levels as the pressure levels
+    array.
+
     See Also
     --------
     potential_temperature
@@ -863,14 +883,22 @@ def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=50, eps=1e-6):
     # Assumes temp in K and pres in hPa
     thtalevs = potential_temperature(levs * units.hPa, tmpk * units.K)
     ithtalevs = thtalevs.magnitude
-    isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
+    isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size,
+                                  tmpk.shape[2], tmpk.shape[3]))
     pk = np.log(levs)
     pok = 1000.**(ka)
     minv = np.apply_along_axis(np.searchsorted,0,thtalevs[0,:], isentlevs)
     ar = np.arange
-    a = (tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - tmpk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]) / (pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
-    b = tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - a * pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]
-    pk1 = pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] + 0.5 * (pk[0,minv + 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    a = (tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - tmpk[0,minv - 1,
+         ar((tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]) /
+            (pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv - 1,
+                                                            ar(tmpk.shape[2]).reshape(-1,1),
+                                                            ar(tmpk.shape[3])]))
+    b = (tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] -
+         a * pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    pk1 = (pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] +
+           0.5 * (pk[0,minv + 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] -
+                  pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]))
     pk2 = so.fixed_point(_isen_iter, pk1, args=(isentlevs2, ka, a, b, pok),
                         xtol=eps, maxiter=max_iters, method='del2')
     isentprs3 = np.exp(pk2)
