@@ -772,6 +772,9 @@ def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=50, eps=1e-3):
     potential_temperature
 
     """
+    if lev[1] > lev[0]:
+        lev = np.flip(lev, axis = 0)
+        tmpk = np.flip(tmpk, axis=1)
     levs = np.repeat(np.repeat(np.repeat(lev[:, np.newaxis],
                          tmpk.shape[2], axis=1)[:, :, np.newaxis],
                          tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
@@ -786,7 +789,6 @@ def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=50, eps=1e-3):
     thtalevs = potential_temperature(levs * units.hPa, tmpk * units.K)
     ithtalevs = thtalevs.magnitude
     isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
-    aminv = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
     pk = np.log(levs)
     pok = 1000.**(ka)
     minv = np.apply_along_axis(np.searchsorted,0,thtalevs[0,:], isentlevs)
@@ -845,6 +847,9 @@ def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=50, eps=1e-6):
         f = isentlevs2 - pok * t * ekp
         fp = pok * ekp * ((ka) * t - a)
         return (pk1 - (f / fp))
+    if lev[1] > lev[0]:
+        lev = np.flip(lev, axis = 0)
+        tmpk = np.flip(tmpk, axis=1)
     levs = np.repeat(np.repeat(np.repeat(lev[:, np.newaxis],
                          tmpk.shape[2], axis=1)[:, :, np.newaxis],
                          tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
@@ -859,7 +864,6 @@ def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=50, eps=1e-6):
     thtalevs = potential_temperature(levs * units.hPa, tmpk * units.K)
     ithtalevs = thtalevs.magnitude
     isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
-    aminv = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
     pk = np.log(levs)
     pok = 1000.**(ka)
     minv = np.apply_along_axis(np.searchsorted,0,thtalevs[0,:], isentlevs)
