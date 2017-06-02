@@ -744,7 +744,7 @@ def psychrometric_vapor_pressure_wet(dry_bulb_temperature, wet_bulb_temperature,
 
 
 @exporter.export
-def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=10, eps=1e-3):
+def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=50, eps=1e-3):
     r"""Compute the pressure on isentropic surfaces.
 
     Parameters
@@ -773,62 +773,47 @@ def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=10, eps=1e-3):
 
     """
     levs = np.repeat(np.repeat(np.repeat(lev[:, np.newaxis],
-                     tmpk.shape[2], axis=1)[:, :, np.newaxis],
-                     tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
-                     tmpk.shape[0], axis=0)
+                         tmpk.shape[2], axis=1)[:, :, np.newaxis],
+                         tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
+                         tmpk.shape[0], axis=0)
+    isentlevs2 = np.repeat(np.repeat(np.repeat(isentlevs[:, np.newaxis],
+                         tmpk.shape[2], axis=1)[:, :, np.newaxis],
+                         tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
+                         tmpk.shape[0], axis=0)
     # exponent to Poisson's Equation, which is imported above
     ka = kappa * 1000 * units('g/kg')
     # Assumes temp in K and pres in hPa
     thtalevs = potential_temperature(levs * units.hPa, tmpk * units.K)
     ithtalevs = thtalevs.magnitude
-    isentprs3 = np.empty((tmpk.shape[0], isentlevs.size, tmpk.shape[2], tmpk.shape[3]))
-    pk = np.log(lev)
+    isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
+    aminv = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
+    pk = np.log(levs)
     pok = 1000.**(ka)
-    for tlev in range(isentlevs.size):
-        for i in range(tmpk.shape[3]):
-            for j in range(tmpk.shape[2]):
-                test = np.where(np.array(thtalevs[0, :, j, i]) >= float(isentlevs[tlev]))
-                minv = np.min(test[0]) - 1
-                if (minv > 0):
-                    # Implementation of GEMPAK routine for computing pressure of a theta level:
-                    # The method solves an implicit equation derived by combining the      *
-                    # definition of potential temperature and the assumption that tem-     *
-                    # perature varies linearly with ln (p).  Newton iteration is used to   *
-                    # solve for ln (p). Code from Kevin Goebbert.
-                    a = (tmpk[0, minv + 1, j, i] - tmpk[0, minv, j, i]) / (pk[minv + 1] -
-                                                                           pk[minv])
-                    b = tmpk[0, minv + 1, j, i] - a * pk[minv + 1]
-                    if (ithtalevs[0, minv + 1, j, i] != ithtalevs[0, minv, j, i]):
-                        rm = (isentlevs[tlev] - ithtalevs[0, minv, j, i]) / (ithtalevs
-                                                                             [0, minv + 1, j,
-                                                                              i] - ithtalevs
-                                                                             [0, minv, j, i])
-                    else:
-                        rm = 0.5
-                    pk1 = pk[minv] + rm * (pk[minv + 1] - pk[minv])
-#                    res = 1.
-#                    k = 1
-                    iter_count = 0
-                    while iter_count < max_iters:
-                        ekp = np.exp((-ka) * pk1)
-                        t = a * pk1 + b
-                        f = isentlevs[tlev] - pok * t * ekp
-                        fp = pok * ekp * ((ka) * t - a)
-                        pin = pk1 - (f / fp)
-                        if np.abs(pk1 - pin) < eps:
-                            break
-                        pk1 = pin
-                        iter_count += 1
-                    isentprs3[0, tlev, j, i] = np.exp(pk1)
-                else:
-                    isentprs3[0, tlev, j, i] = 'nan'
+    minv = np.apply_along_axis(np.searchsorted,0,thtalevs[0,:], isentlevs)
+    ar = np.arange
+    a = (tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - tmpk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]) / (pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    b = tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - a * pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]
+    pk1 = pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] + 0.5 * (pk[0,minv + 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    while max_iters:
+        ekp = np.exp((-ka) * pk1)
+        t = a * pk1 + b
+        f = isentlevs2 - pok * t * ekp
+        fp = pok * ekp * ((ka) * t - a)
+        pin = pk1 - (f / fp)
+        if np.all(np.abs(pk1 - pin)) < eps:
+            break
+        pk1 = pin
+        max_iters -= 1
+        if max_iters == 0:
+            print('Max Iterations Reached')
+            break
+    isentprs3 = np.exp(pk1)
     return isentprs3
 
-
 @exporter.export
-def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=10, eps=1e-3):
+def get_isentropic_pressure(lev, tmpk, isentlevs, max_iters=50, eps=1e-6):
     r"""Compute the pressure on isentropic surfaces.
-        Uses Scipy fixed_point method
+
     Parameters
     ----------
     levs : array
@@ -854,135 +839,35 @@ def get_isentropic_pressure2(lev, tmpk, isentlevs, max_iters=10, eps=1e-3):
     potential_temperature
 
     """
-    def _isen_iter(pk1, isentlev, ka, a, b, pok):
+    def _isen_iter(pk1, isentlevs2, ka, a, b, pok):
         ekp = np.exp((-ka) * pk1)
-        t = (a * pk1) + b
-        f = isentlev - (pok * t * ekp)
+        t = a * pk1 + b
+        f = isentlevs2 - pok * t * ekp
         fp = pok * ekp * ((ka) * t - a)
         return (pk1 - (f / fp))
-
     levs = np.repeat(np.repeat(np.repeat(lev[:, np.newaxis],
-                     tmpk.shape[2], axis=1)[:, :, np.newaxis],
-                     tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
-                     tmpk.shape[0], axis=0)
+                         tmpk.shape[2], axis=1)[:, :, np.newaxis],
+                         tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
+                         tmpk.shape[0], axis=0)
+    isentlevs2 = np.repeat(np.repeat(np.repeat(isentlevs[:, np.newaxis],
+                         tmpk.shape[2], axis=1)[:, :, np.newaxis],
+                         tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
+                         tmpk.shape[0], axis=0)
     # exponent to Poisson's Equation, which is imported above
     ka = kappa * 1000 * units('g/kg')
     # Assumes temp in K and pres in hPa
     thtalevs = potential_temperature(levs * units.hPa, tmpk * units.K)
     ithtalevs = thtalevs.magnitude
-    isentprs3 = np.empty((tmpk.shape[0], isentlevs.size, tmpk.shape[2], tmpk.shape[3]))
-    pk = np.log(lev)
+    isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
+    aminv = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size, tmpk.shape[2], tmpk.shape[3]))
+    pk = np.log(levs)
     pok = 1000.**(ka)
-    for tlev in range(isentlevs.size):
-        for i in range(tmpk.shape[3]):
-            for j in range(tmpk.shape[2]):
-                test = np.where(np.array(thtalevs[0, :, j, i]) >= float(isentlevs[tlev]))
-                minv = np.min(test[0]) - 1
-                if (minv > 0):
-                    # Implementation of GEMPAK routine for computing pressure of a theta level:
-                    # The method solves an implicit equation derived by combining the      *
-                    # definition of potential temperature and the assumption that tem-     *
-                    # perature varies linearly with ln (p).  Newton iteration is used to   *
-                    # solve for ln (p). Code from Kevin Goebbert.
-                    a = (tmpk[0, minv + 1, j, i] - tmpk[0, minv, j, i]) / (pk[minv + 1] -
-                                                                           pk[minv])
-                    b = tmpk[0, minv + 1, j, i] - a * pk[minv + 1]
-                    if (ithtalevs[0, minv + 1, j, i] != ithtalevs[0, minv, j, i]):
-                        rm = (isentlevs[tlev] - ithtalevs[0, minv, j, i]) / (ithtalevs
-                                                                             [0, minv + 1, j,
-                                                                              i] - ithtalevs
-                                                                             [0, minv, j, i])
-                    else:
-                        rm = 0.5
-                    pk1 = pk[minv] + rm * (pk[minv + 1] - pk[minv])
-
-                    pk2 = so.fixed_point(_isen_iter, pk1, args=(isentlevs[tlev], ka, a, b, pok),
+    minv = np.apply_along_axis(np.searchsorted,0,thtalevs[0,:], isentlevs)
+    ar = np.arange
+    a = (tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - tmpk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]) / (pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    b = tmpk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - a * pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]
+    pk1 = pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] + 0.5 * (pk[0,minv + 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])] - pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])])
+    pk2 = so.fixed_point(_isen_iter, pk1, args=(isentlevs2, ka, a, b, pok),
                         xtol=eps, maxiter=max_iters, method='del2')
-                    isentprs3[0, tlev, j, i] = np.exp(pk2)
-                else:
-                    isentprs3[0, tlev, j, i] = 'nan'
-    return isentprs3
-
-@exporter.export
-def get_isentropic_pressure3(lev, tmpk, isentlevs, max_iters=800, eps=1e-3):
-    r"""Compute the pressure on isentropic surfaces.
-
-    Parameters
-    ----------
-    levs : array
-        Pressure levels in hPa
-    tmpk : array
-        Temperature in Kelvin
-    isentlevs : array
-        Array of desired theta surfaces
-
-    Returns
-    -------
-    isentpr : array
-        Array of pressure at specified theta surfaces
-
-    Other Parameters
-    ----------------
-    max_iters : int, optional
-        The maximum number of iterations to use in calculation, defaults to 10.
-    eps : float, optional
-        The desired absolute error in the calculated value, defaults to 1e-3.
-    See Also
-    --------
-    potential_temperature
-
-    """
-    levs = np.repeat(np.repeat(np.repeat(lev[:, np.newaxis],
-                     tmpk.shape[2], axis=1)[:, :, np.newaxis],
-                     tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
-                     tmpk.shape[0], axis=0)
-    # exponent to Poisson's Equation, which is imported above
-    ka = kappa * 1000 * units('g/kg')
-    # Assumes temp in K and pres in hPa
-    thtalevs = potential_temperature(levs * units.hPa, tmpk * units.K)
-    ithtalevs = thtalevs.magnitude
-    isentprs3 = np.empty((tmpk.shape[0], isentlevs.size, tmpk.shape[2], tmpk.shape[3]))
-    pk = np.log(lev)
-    pok = 1000.**(ka)
-    for tlev in range(isentlevs.size):
-        for i in range(tmpk.shape[3]):
-            for j in range(tmpk.shape[2]):
-                test = np.where(np.array(thtalevs[0, :, j, i]) >= float(isentlevs[tlev]))
-                minv = np.min(test[0]) - 1
-                if (minv > 0):
-                    # Implementation of GEMPAK routine for computing pressure of a theta level:
-                    # The method solves an implicit equation derived by combining the      *
-                    # definition of potential temperature and the assumption that tem-     *
-                    # perature varies linearly with ln (p).  Newton iteration is used to   *
-                    # solve for ln (p). Code from Kevin Goebbert.
-                    a = (tmpk[0, minv + 1] - tmpk[0, minv]) / (pk[minv + 1] -
-                                                                           pk[minv])
-                    b = tmpk[0, minv + 1] - a * pk[minv + 1]
-                    # if (ithtalevs[0, minv + 1, j, i] != ithtalevs[0, minv, j, i]):
-                    #     rm = (isentlevs[tlev] - ithtalevs[0, minv, j, i]) / (ithtalevs
-                    #                                                          [0, minv + 1, j,
-                    #                                                           i] - ithtalevs
-                    #                                                          [0, minv, j, i])
-                    # else:
-                    #     rm = 0.5
-                    pk1 = pk[minv] + 0.5 * (pk[minv + 1] - pk[minv])
-#                    res = 1.
-#                    k = 1
-                    iter_count = 0
-                    while iter_count < max_iters:
-                        ekp = np.exp((-ka) * pk1)
-                        t = a * pk1 + b
-                        f = isentlevs[tlev] - pok * t * ekp
-                        fp = pok * ekp * ((ka) * t - a)
-                        pin = pk1 - (f / fp)
-#                        print(pk1, pin)
-                        if np.abs(pk1 - pin) < eps:
-                            break
-                        pk1 = pin
-                        iter_count += 1
-                    else:
-                        print('Max iterations reached:', i, j)
-                    isentprs3[0, tlev, j, i] = np.exp(pk1)
-                else:
-                    isentprs3[0, tlev, j, i] = 'nan'
+    isentprs3 = np.exp(pk2)
     return isentprs3
