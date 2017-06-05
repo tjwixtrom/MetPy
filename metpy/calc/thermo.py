@@ -847,7 +847,8 @@ def get_isentropic_pressure(lev, tmp, rh, u, v, isentlevs, max_iters=50, eps=1e-
                   pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]))
     pk2 = so.fixed_point(_isen_iter, pk1, args=(isentlevs2, ka, a, b, pok),
                         xtol=eps, maxiter=max_iters, method='del2')
-    isentprs3 = np.exp(pk2) * units.hPa
+    isentprs = np.exp(pk2)
+    isentprs[isentprs > 1000.] = np.nan
 
     w1 = pk1 / pk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]
     w2 = pk1 / pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]
@@ -864,4 +865,7 @@ def get_isentropic_pressure(lev, tmp, rh, u, v, isentlevs, max_iters=50, eps=1e-
                                                       ar(tmpk.shape[2]).reshape(-1,1),
                                                       ar(tmpk.shape[3])]) / (w1 + w2)
 
-    return isentprs3, isentrhprs, isentugrd, isentvgrd
+    isentrhprs[np.isnan(isentprs[0, :])] = np.nan
+    isentugrd[np.isnan(isentprs[0, :])] = np.nan
+    isentvgrd[np.isnan(isentprs[0, :])] = np.nan
+    return isentprs * units.hPa, isentrhprs, isentugrd, isentvgrd
