@@ -743,24 +743,38 @@ def psychrometric_vapor_pressure_wet(dry_bulb_temperature, wet_bulb_temperature,
             pressure * (dry_bulb_temperature - wet_bulb_temperature).to('kelvin'))
 
 
-@check_units('[pressure]', '[temperature]', '[temperature]')
+@check_units('[pressure]', '[temperature]', '[dimensionless]', '[speed]', '[speed]', '[temperature]')
 @exporter.export
-def get_isentropic_pressure(lev, tmp, isentlevs, max_iters=50, eps=1e-6):
-    r"""Compute the pressure on isentropic surfaces.
+def get_isentropic_pressure(lev, tmp, rh, u, v, isentlevs, max_iters=50, eps=1e-6):
+    r"""Compute the pressure on isentropic surfaces from isobaric surfaces.
 
     Parameters
     ----------
-    levs : array
+    lev : array
         Array of pressure levels
-    tmpk : array
+    tmp : array
         Array of temperature
+    rh : array
+        Array of relative humidity
+    u : array
+        Array of U-component of wind
+    v : array
+        Array of V-component of wind
     isentlevs : array
         Array of desired theta surfaces
 
     Returns
     -------
+    isentpr, isentrhprs, isentugrd, isentvgrd
+
     isentpr : array
         Array of pressure at specified theta surfaces
+    isentrhprs : array
+        Array of relative humidity at specified theta surfaces
+    isentugrd : array
+        Array of u-component of wind at specified theta surfaces
+    isentvgrd : array
+        Array of v-component of wind at specified theta surfaces
 
     Other Parameters
     ----------------
@@ -771,8 +785,12 @@ def get_isentropic_pressure(lev, tmp, isentlevs, max_iters=50, eps=1e-6):
 
     Notes
     -----
-    Temperature array must have the same number of vertical levels as the pressure levels
-    array.
+    Temperature, relative humidity, and wind component arrays must have the same number of
+    vertical levels as the pressure levels array. Returns calculations for a single timestep.
+    Presure is calculated on isentropic surfaces by assuming that tempertaure varies linearly
+    with the natural log of pressure. Linear interpolation is then used in the vertical to
+    find the pressure at each isentropic level. Interpolation method from Hoerling and Sanford
+    1993.
 
     See Also
     --------
@@ -793,6 +811,8 @@ def get_isentropic_pressure(lev, tmp, isentlevs, max_iters=50, eps=1e-6):
     tmpk = tmp.to('kelvin')
     levels = lev.to('hPa')
     isentlevels = isentlevs.to('kelvin')
+    uwnd = u.to('meter/second')
+    vwnd = v.to('meter/second')
     levs = np.repeat(np.repeat(np.repeat(levels[:, np.newaxis],
                          tmpk.shape[2], axis=1)[:, :, np.newaxis],
                          tmpk.shape[3], axis=2)[np.newaxis, :, :, :],
@@ -803,11 +823,9 @@ def get_isentropic_pressure(lev, tmp, isentlevs, max_iters=50, eps=1e-6):
                          tmpk.shape[0], axis=0)
     # exponent to Poisson's Equation, which is imported above
     ka = kappa * 1000 * units('g/kg')
-    # Assumes temp in K and pres in hPa
     thtalevs = potential_temperature(levs, tmpk)
     ithtalevs = thtalevs.magnitude
-    isentprs3 = np.nan * np.empty((tmpk.shape[0], np.array(isentlevs).size,
-                                  tmpk.shape[2], tmpk.shape[3]))
+
     pk = np.log(levs.m)
     pok = 1000.**(ka)
     minv = np.apply_along_axis(np.searchsorted,0,thtalevs[0,:], isentlevs)
@@ -830,4 +848,19 @@ def get_isentropic_pressure(lev, tmp, isentlevs, max_iters=50, eps=1e-6):
     pk2 = so.fixed_point(_isen_iter, pk1, args=(isentlevs2, ka, a, b, pok),
                         xtol=eps, maxiter=max_iters, method='del2')
     isentprs3 = np.exp(pk2) * units.hPa
-    return isentprs3
+
+    w1 = pk1 / pk[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]
+    w2 = pk1 / pk[0,minv, ar(tmpk.shape[2]).reshape(-1,1), ar(tmpk.shape[3])]
+    isentugrd = (w1 * uwnd[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1),
+                       ar(tmpk.shape[3])] + w2 * uwnd[0,minv,
+                                                      ar(tmpk.shape[2]).reshape(-1,1),
+                                                      ar(tmpk.shape[3])]) / (w1 + w2)
+    isentvgrd = (w1 * vwnd[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1),
+                       ar(tmpk.shape[3])] + w2 * vwnd[0,minv,
+                                                      ar(tmpk.shape[2]).reshape(-1,1),
+                                                      ar(tmpk.shape[3])]) / (w1 + w2)
+    isentrhprs = (w1 * rh[0,minv - 1, ar(tmpk.shape[2]).reshape(-1,1),
+                       ar(tmpk.shape[3])] + w2 * rh[0,minv,
+                                                      ar(tmpk.shape[2]).reshape(-1,1),
+                                                      ar(tmpk.shape[3])]) / (w1 + w2)
+    return isentprs3, isentrhprs, isentugrd, isentvgrd
