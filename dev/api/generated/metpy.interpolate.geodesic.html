@@ -245,12 +245,12 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>crs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">cartopy.crs</span></code>) – Cartopy Coordinate Reference System to use for the output</p></li>
+<li><p><strong>crs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">pyproj.CRS</span></code>) – PyProj Coordinate Reference System to use for the output</p></li>
 <li><p><strong>start</strong> (<em>(</em><em>2</em><em>, </em><em>) </em><em>array_like</em>) – A latitude-longitude pair designating the start point of the geodesic (units are
 degrees north and degrees east).</p></li>
 <li><p><strong>end</strong> (<em>(</em><em>2</em><em>, </em><em>) </em><em>array_like</em>) – A latitude-longitude pair designating the end point of the geodesic (units are degrees
 north and degrees east).</p></li>
-<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – The number of points along the geodesic between the start and the end point
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The number of points along the geodesic between the start and the end point
 (including the end points).</p></li>
 </ul>
 </dd>
@@ -288,8 +288,8 @@ north and degrees east).</p></li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, MetPy Developers. Development supported by National Science Foundation grants AGS-1344155, OAC-1740315, and AGS-1901712..
-      Last updated on Sep 15, 2020 at 19:14:28.
+        &copy; Copyright 2008-2020, MetPy Developers. Development supported by National Science Foundation grants AGS-1344155, OAC-1740315, and AGS-1901712..
+      Last updated on Nov 02, 2020 at 21:56:02.
 
     </p>
   </div>
@@ -323,7 +323,7 @@ north and degrees east).</p></li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.0.post447+g86883d4',
+            VERSION:'0.0.post583+gcde84bb',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

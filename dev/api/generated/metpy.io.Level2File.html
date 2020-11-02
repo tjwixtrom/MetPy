@@ -233,7 +233,7 @@
 <h1>Level2File<a class="headerlink" href="#level2file" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="metpy.io.Level2File">
-<em class="property">class </em><code class="sig-prename descclassname">metpy.io.</code><code class="sig-name descname">Level2File</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metpy/io/nexrad.html#Level2File"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metpy.io.Level2File" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">metpy.io.</code><code class="sig-name descname">Level2File</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">has_volume_header</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metpy/io/nexrad.html#Level2File"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metpy.io.Level2File" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle reading the NEXRAD Level 2 data and its various messages.</p>
 <p>This class attempts to decode every byte that is in a given data file.
 It supports both external compression, as well as the internal BZ2
@@ -244,7 +244,7 @@ compression that is used.</p>
 <dd><p>The ID of the radar station</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -310,7 +310,7 @@ compression that is used.</p>
 <dd><p>Descriptions of maintenance data fields, if maintenance data present</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a>, optional</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a>, optional</p>
 </dd>
 </dl>
 </dd></dl>
@@ -332,7 +332,7 @@ compression that is used.</p>
 <dd><p>Unpacked clutter filter bypass map, if present</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a>, optional</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a>, optional</p>
 </dd>
 </dl>
 </dd></dl>
@@ -343,7 +343,7 @@ compression that is used.</p>
 <dd><p>Unpacked RDA adaptation data, if present</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a>, optional</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a>, optional</p>
 </dd>
 </dl>
 </dd></dl>
@@ -354,7 +354,7 @@ compression that is used.</p>
 <dd><p>Descriptions of RDA adaptation data, if adaptation data present</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a>, optional</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a>, optional</p>
 </dd>
 </dl>
 </dd></dl>
@@ -365,9 +365,9 @@ determined.</p>
 <p>Create instance of <a class="reference internal" href="#metpy.io.Level2File" title="metpy.io.Level2File"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Level2File</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em> or </em><em>file-like object</em>) – If str, the name of the file to be opened. Gzip-ed files are
+<dd class="field-odd"><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em> or </em><em>file-like object</em>) – If str, the name of the file to be opened. Gzip-ed files are
 recognized with the extension ‘.gz’, as are bzip2-ed files with
-the extension <a class="reference external" href="https://docs.python.org/3/library/bz2.html#module-bz2" title="(in Python v3.8)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bz2</span></code></a> If <em class="xref py py-obj">filename</em> is a file-like object,
+the extension <a class="reference external" href="https://docs.python.org/3/library/bz2.html#module-bz2" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bz2</span></code></a> If <em class="xref py py-obj">filename</em> is a file-like object,
 this will be read from directly.</p>
 </dd>
 </dl>
@@ -441,7 +441,7 @@ this will be read from directly.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#metpy.io.Level2File.__init__" title="metpy.io.Level2File.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(filename)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#metpy.io.Level2File.__init__" title="metpy.io.Level2File.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(filename, *[, has_volume_header])</p></td>
 <td><p>Create instance of <a class="reference internal" href="#metpy.io.Level2File" title="metpy.io.Level2File"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Level2File</span></code></a>.</p></td>
 </tr>
 </tbody>
@@ -540,13 +540,13 @@ this will be read from directly.</p>
 <p class="rubric">Methods Documentation</p>
 <dl class="py method">
 <dt id="metpy.io.Level2File.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metpy/io/nexrad.html#Level2File.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metpy.io.Level2File.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">has_volume_header</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metpy/io/nexrad.html#Level2File.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metpy.io.Level2File.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create instance of <a class="reference internal" href="#metpy.io.Level2File" title="metpy.io.Level2File"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Level2File</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em> or </em><em>file-like object</em>) – If str, the name of the file to be opened. Gzip-ed files are
+<dd class="field-odd"><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em> or </em><em>file-like object</em>) – If str, the name of the file to be opened. Gzip-ed files are
 recognized with the extension ‘.gz’, as are bzip2-ed files with
-the extension <a class="reference external" href="https://docs.python.org/3/library/bz2.html#module-bz2" title="(in Python v3.8)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bz2</span></code></a> If <em class="xref py py-obj">filename</em> is a file-like object,
+the extension <a class="reference external" href="https://docs.python.org/3/library/bz2.html#module-bz2" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bz2</span></code></a> If <em class="xref py py-obj">filename</em> is a file-like object,
 this will be read from directly.</p>
 </dd>
 </dl>
@@ -585,8 +585,8 @@ this will be read from directly.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, MetPy Developers. Development supported by National Science Foundation grants AGS-1344155, OAC-1740315, and AGS-1901712..
-      Last updated on Sep 15, 2020 at 19:14:28.
+        &copy; Copyright 2008-2020, MetPy Developers. Development supported by National Science Foundation grants AGS-1344155, OAC-1740315, and AGS-1901712..
+      Last updated on Nov 02, 2020 at 21:56:02.
 
     </p>
   </div>
@@ -620,7 +620,7 @@ this will be read from directly.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.0.post447+g86883d4',
+            VERSION:'0.0.post583+gcde84bb',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
